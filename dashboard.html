@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAIMS — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080a0e;--bg2:#0d1117;--bg3:#111820;--gold:#c9a84c;--gold2:#e8c96e;--blue2:#60a5fa;--text:#d4d8e0;--text-dim:#6b7280;--border:#1e2530;--card-bg:rgba(255,255,255,0.02);--red:#ef4444;--green:#22c55e;--yellow:#f59e0b;--purple:#a855f7;--sidebar:230px;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;display:flex;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px;}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;}
+.sb-logo{padding:1.3rem 1.5rem;border-bottom:1px solid var(--border);}
+.sb-logo-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:5px;color:var(--gold);}
+.sb-logo-sub{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:2px;}
+.sb-nav{flex:1;padding:0.75rem 0;overflow-y:auto;}
+.sb-section{padding:0.5rem 1.2rem 0.2rem;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:2px;}
+.sb-item{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.5rem;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;font-size:0.88rem;font-weight:600;color:var(--text-dim);}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,0.025);}
+.sb-item.active{color:var(--gold);background:rgba(201,168,76,0.07);border-left-color:var(--gold);}
+.sb-icon{font-size:1rem;width:20px;text-align:center;}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:0.6rem;padding:0.1rem 0.45rem;font-family:'Share Tech Mono',monospace;display:none;}
+.sb-user{padding:1rem 1.5rem;border-top:1px solid var(--border);}
+.sb-user-name{font-weight:700;font-size:0.9rem;}
+.sb-user-role{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gold);letter-spacing:1px;}
+.sb-user-clear{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);}
+.sb-logout{margin-top:0.75rem;width:100%;padding:0.5rem;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:3px;color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.sb-logout:hover{background:rgba(239,68,68,0.18);}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 1.8rem;background:var(--bg2);border-bottom:1px solid var(--border);}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:3px;}
+.topbar-crumb{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:2px;}
+.topbar-right{display:flex;align-items:center;gap:1.2rem;}
+.topbar-time{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.content{flex:1;overflow-y:auto;padding:1.4rem 1.8rem 2rem;}
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:3px;padding:1.1rem 1.3rem;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;cursor:default;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--gold));opacity:0.7;}
+.stat-card:hover{border-color:rgba(201,168,76,0.25);transform:translateY(-2px);}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--accent,var(--gold));line-height:1;}
+.stat-lbl{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.stat-sub{font-size:0.75rem;color:var(--text-dim);margin-top:3px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:3px;}
+.sec-sub{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;}
+.sec-actions{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;}
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1.5rem;}
+.tbl-toolbar{display:flex;align-items:center;justify-content:space-between;padding:0.65rem 1rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01);gap:0.75rem;flex-wrap:wrap;}
+.tbl-info{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:1px;}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:1px solid var(--border);}
+th{text-align:left;padding:0.65rem 0.9rem;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:400;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--gold2);}
+td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid rgba(30,37,48,0.5);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+.mono{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--text-dim);}
+.badge{display:inline-block;padding:0.15rem 0.55rem;border-radius:2px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:1px;white-space:nowrap;}
+.bg{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);}
+.by{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--yellow);}
+.br{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);}
+.bb{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);color:var(--blue2);}
+.bp{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--purple);}
+.bd{background:rgba(107,114,128,0.1);border:1px solid rgba(107,114,128,0.3);color:var(--text-dim);}
+.btn{padding:0.42rem 0.9rem;border:none;border-radius:2px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:1px;transition:all 0.2s;white-space:nowrap;}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--text-dim);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-red{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--red);}
+.btn-red:hover{background:rgba(239,68,68,0.18);}
+.btn-green{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+.btn-green:hover{background:rgba(34,197,94,0.18);}
+.btn-sm{padding:0.3rem 0.65rem;font-size:0.62rem;}
+.search-input{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:0.42rem 0.8rem;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.75rem;outline:none;transition:border-color 0.2s;width:190px;}
+.search-input:focus{border-color:var(--gold);}
+.search-input::placeholder{color:var(--text-dim);opacity:0.5;}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1.8rem;width:100%;max-width:460px;position:relative;animation:modalIn 0.25s ease;max-height:90vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;margin-bottom:1.4rem;}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;padding:0.2rem 0.4rem;}
+.modal-close:hover{color:var(--red);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+.form-field{margin-bottom:0.9rem;}
+.form-field label{display:block;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;}
+.form-field input,.form-field select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:0.55rem 0.8rem;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.78rem;outline:none;transition:border-color 0.2s;}
+.form-field input:focus,.form-field select:focus{border-color:var(--gold);}
+.form-field select option{background:var(--bg2);}
+.modal-actions{display:flex;gap:0.75rem;margin-top:1.3rem;justify-content:flex-end;}
+.modal-error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:3px;padding:0.6rem 0.9rem;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--red);margin-top:0.75rem;display:none;}
+.modal-error.show{display:block;}
+#toast{position:fixed;bottom:1.8rem;right:1.8rem;z-index:9000;padding:0.75rem 1.3rem;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:0.73rem;letter-spacing:1px;display:none;pointer-events:none;}
+#toast.ss{display:block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.4);color:var(--green);animation:toastIn 0.3s ease;}
+#toast.se{display:block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:var(--red);animation:toastIn 0.3s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.empty-row td,.loading-row td{text-align:center;padding:2rem;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);letter-spacing:2px;}
+.dash-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:1.2rem;}
+.dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1.2rem;}
+.dash-card-head{padding:0.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.dash-card-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;}
+.dash-card-sub{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:1px;}
+.bar-chart{padding:1rem;}
+.bar-item{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.8rem;}
+.bar-label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);width:105px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.9s cubic-bezier(0.4,0,0.2,1);width:0%;}
+.bar-val{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);width:30px;text-align:right;}
+.activity-list{padding:0.25rem 0;}
+.activity-item{display:flex;align-items:flex-start;gap:0.75rem;padding:0.65rem 1rem;border-bottom:1px solid rgba(30,37,48,0.5);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.activity-text{font-size:0.83rem;}
+.activity-meta{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-top:2px;}
+.donut-wrap{display:flex;align-items:center;justify-content:space-around;padding:1.1rem;}
+.donut-svg{width:100px;height:100px;}
+.donut-legend{display:flex;flex-direction:column;gap:0.5rem;}
+.legend-item{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sql-runner{background:var(--bg2);border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.sql-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
+.sql-tab{padding:0.65rem 1.1rem;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--text-dim);transition:all 0.15s;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+.sql-tab:hover{color:var(--text);}
+.sql-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.sql-panel{display:none;padding:1rem;}
+.sql-panel.active{display:block;}
+.code-editor{background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:0.78rem;color:#abb2bf;padding:0.9rem 1rem;min-height:90px;line-height:1.7;outline:none;resize:vertical;width:100%;}
+.code-editor:focus{border-color:rgba(201,168,76,0.4);}
+.sql-bar{display:flex;align-items:center;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;}
+.sql-status{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);flex:1;min-width:100px;}
+.sql-presets{margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;}
+.sql-preset-lbl{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:1px;}
+.result-wrap{margin-top:0.9rem;}
+.result-meta{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:0.5rem;}
+.result-tbl-wrap{max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:3px;}
+.result-tbl-wrap table td{font-size:0.78rem;padding:0.4rem 0.75rem;}
+.result-tbl-wrap table th{font-size:0.58rem;padding:0.4rem 0.75rem;}
+.code-block{background:var(--bg3);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:0.9rem;}
+.code-hdr{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.9rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
+.code-dots{display:flex;gap:5px;}
+.dot{width:9px;height:9px;border-radius:50%;}
+.code-file{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:1px;}
+.code-body{padding:1rem 1.1rem;font-family:'Share Tech Mono',monospace;font-size:0.76rem;line-height:1.75;overflow-x:auto;color:#abb2bf;}
+.kw{color:#c678dd;}.fn{color:#61afef;}.str{color:#98c379;}.cm{color:#5c6370;font-style:italic;}.nm{color:#d19a66;}.tb{color:var(--gold);}
+.profile-wrap{padding:2rem;}
+.profile-top{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#0f3d8f);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.9rem;color:#000;border:2px solid var(--gold);}
+.profile-info h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;}
+.profile-fields{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+.pf{background:var(--card-bg);border:1px solid var(--border);border-radius:3px;padding:0.9rem 1rem;}
+.pf label{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--gold);letter-spacing:2px;display:block;margin-bottom:0.3rem;}
+.pf p{font-size:0.9rem;font-weight:600;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-title">WAIMS</div>
+    <div class="sb-logo-sub">// Inventory Management v1.0</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">// Overview</div>
+    <div class="sb-item active" data-panel="dashboard"><span class="sb-icon">📊</span>Dashboard</div>
+    <div class="sb-section">// Modules</div>
+    <div class="sb-item" data-panel="inventory"><span class="sb-icon">🗃️</span>Inventory</div>
+    <div class="sb-item" data-panel="personnel"><span class="sb-icon">👤</span>Applicants</div>
+    <div class="sb-item" data-panel="Issues"><span class="sb-icon">📤</span>Issue &amp; Return<span class="sb-badge" id="overdueBadge">!</span></div>
+    <div class="sb-item" data-panel="tracker"><span class="sb-icon">🔍</span>Who Has What</div>
+    <div class="sb-item" data-panel="maintenance"><span class="sb-icon">🔧</span>Maintenance</div>
+    <div class="sb-section">// System</div>
+    <div class="sb-item" data-panel="sql"><span class="sb-icon">⚙️</span>SQL Terminal</div>
+    <div class="sb-item" data-panel="normalization"><span class="sb-icon">📐</span>Normalization</div>
+    <div class="sb-item" data-panel="audit"><span class="sb-icon">📋</span>Audit Log</div>
+    <div class="sb-item" data-panel="profile"><span class="sb-icon">🪪</span>My Profile</div>
+  </nav>
+  <div class="sb-user">
+    <div class="sb-user-name" id="sbName">—</div>
+    <div class="sb-user-role" id="sbRole">—</div>
+    <div class="sb-user-clear" id="sbClear">—</div>
+    <button class="sb-logout" onclick="logout()">⏻ &nbsp;LOGOUT</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="panelTitle">DASHBOARD</div>
+      <div class="topbar-crumb" id="panelCrumb">// overview</div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-dot"></div>
+      <div class="topbar-time" id="clock"></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-row" id="statsRow"><div class="stat-card"><div class="stat-num" style="font-size:1rem;color:var(--text-dim)">LOADING…</div></div></div>
+      <div class="dash-grid">
+        <div>
+          <div class="dash-card">
+            <div class="dash-card-head"><div><div class="dash-card-title">Inventory by Category</div><div class="dash-card-sub">// unit distribution</div></div></div>
+            <div class="bar-chart" id="barChart"><div style="color:var(--text-dim);font-size:0.7rem;padding:1rem">Loading…</div></div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-head"><div><div class="dash-card-title">Recent Activity</div><div class="dash-card-sub">// issue log</div></div></div>
+            <div class="activity-list" id="activityList"></div>
+          </div>
+        </div>
+        <div>
+          <div class="dash-card">
+            <div class="dash-card-head"><div><div class="dash-card-title">Condition Split</div><div class="dash-card-sub">// weapon status</div></div></div>
+            <div class="donut-wrap" id="donutWrap"><div style="color:var(--text-dim);font-size:0.7rem">Loading…</div></div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-head"><div><div class="dash-card-title">Quick Actions</div></div></div>
+            <div style="padding:1rem;display:flex;flex-direction:column;gap:0.6rem;">
+              <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="switchPanel('Issues');openModal('issue')">+ Issue a Weapon</button>
+              <button class="btn btn-outline" style="width:100%" onclick="switchPanel('maintenance');openModal('maint')">+ Log Maintenance</button>
+              <button class="btn btn-outline" style="width:100%" onclick="switchPanel('sql')">⚙ Open SQL Terminal</button>
+              <button class="btn btn-outline" style="width:100%" onclick="loadAll()">↺ Refresh All Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="panel" id="panel-inventory">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Weapon Inventory</div><div class="sec-sub">// all registered assets</div></div>
+        <div class="sec-actions">
+          <input class="search-input" placeholder="Search name / category…" id="weaponSearch" oninput="filterWeapons()">
+          <select class="search-input" style="width:130px" id="condFilter" onchange="filterWeapons()">
+            <option value="">All Conditions</option><option>Operational</option><option>Maintenance</option><option>Decommissioned</option>
+          </select>
+          <button class="btn btn-gold" onclick="openModal('weapon')" id="addWeaponBtn">+ ADD WEAPON</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div class="tbl-info" id="weaponCount">— records</div><button class="btn btn-outline btn-sm" onclick="loadWeapons()">↺ REFRESH</button></div>
+        <table>
+          <thead><tr>
+            <th onclick="srt('weapons','weapon_id')">ID ↕</th><th onclick="srt('weapons','name')">Name ↕</th>
+            <th>Category</th><th>Serial No.</th><th onclick="srt('weapons','quantity')">Qty ↕</th>
+            <th>Condition</th><th>Location</th><th>Action</th>
+          </tr></thead>
+          <tbody id="weaponsTbody"><tr class="loading-row"><td colspan="8">LOADING…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PERSONNEL -->
+    <div class="panel" id="panel-personnel">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Applicants</div><div class="sec-sub">// registered applicants</div></div>
+        <div class="sec-actions">
+          <input class="search-input" placeholder="Search name / unit…" id="personnelSearch" oninput="filterPersonnel()">
+          <button class="btn btn-gold" onclick="openModal('personnel')" id="addPersonnelBtn">+ ADD APPLICANT</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div class="tbl-info" id="personnelCount">— records</div><button class="btn btn-outline btn-sm" onclick="loadPersonnel()">↺ REFRESH</button></div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th onclick="srt('personnel','name')">Name ↕</th>
+            <th>Student ID</th><th>Department</th><th>Purpose</th><th>Contact</th>
+          </tr></thead>
+          <tbody id="personnelTbody"><tr class="loading-row"><td colspan="6">LOADING…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Issues -->
+    <div class="panel" id="panel-Issues">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Issue &amp; Return Log</div><div class="sec-sub">// full movement history</div></div>
+        <div class="sec-actions">
+          <select class="search-input" style="width:130px" id="issueFilter" onchange="filterIssues()">
+            <option value="">All Statuses</option><option>ISSUED</option><option>RETURNED</option><option>OVERDUE</option>
+          </select>
+          <button class="btn btn-gold" onclick="openModal('issue')">+ ISSUE WEAPON</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div class="tbl-info" id="issueCount">— records</div><button class="btn btn-outline btn-sm" onclick="loadIssues()">↺ REFRESH</button></div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Weapon</th><th>Officer</th>
+            <th onclick="srt('Issues','issue_date')">Issue Date ↕</th>
+            <th>Return Date</th><th>Status</th><th>Action</th>
+          </tr></thead>
+          <tbody id="IssuesTbody"><tr class="loading-row"><td colspan="7">LOADING…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE -->
+    <div class="panel" id="panel-maintenance">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Maintenance Log</div><div class="sec-sub">// service &amp; inspection records</div></div>
+        <div class="sec-actions">
+          <select class="search-input" style="width:140px" id="maintFilter" onchange="filterMaint()">
+            <option value="">All Outcomes</option><option>IN PROGRESS</option><option>COMPLETED</option><option>PENDING</option>
+          </select>
+          <button class="btn btn-gold" onclick="openModal('maint')">+ LOG MAINTENANCE</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div class="tbl-info" id="maintCount">— records</div><button class="btn btn-outline btn-sm" onclick="loadMaint()">↺ REFRESH</button></div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Weapon</th><th>Tech ID</th>
+            <th onclick="srt('maint','date')">Date ↕</th>
+            <th>Type</th><th>Outcome</th><th>Next Due</th>
+          </tr></thead>
+          <tbody id="maintTbody"><tr class="loading-row"><td colspan="7">LOADING…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WHO HAS WHAT TRACKER -->
+    <div class="panel" id="panel-tracker">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Who Has What</div><div class="sec-sub">// live applicant-weapon tracking</div></div>
+        <div class="sec-actions">
+          <input class="search-input" placeholder="Search by name or weapon..." id="trackerSearch" oninput="filterTracker()">
+          <select class="search-input" style="width:130px" id="trackerStatus" onchange="filterTracker()">
+            <option value="">All Statuses</option>
+            <option value="ISSUED">ISSUED</option>
+            <option value="OVERDUE">OVERDUE</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="stats-row" id="trackerStats" style="margin-bottom:1.5rem"></div>
+
+      <!-- Main tracking table -->
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <div class="tbl-info" id="trackerCount">— active records</div>
+          <button class="btn btn-outline btn-sm" onclick="loadTracker()">↺ REFRESH</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Officer</th>
+            <th>Rank</th>
+            <th>Clearance</th>
+            <th>Weapon</th>
+            <th>Category</th>
+            <th>Issued On</th>
+            <th>Days Out</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr></thead>
+          <tbody id="trackerTbody"><tr class="loading-row"><td colspan="9">LOADING...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Per-personnel breakdown -->
+      <div class="sec-hdr" style="margin-top:1.5rem">
+        <div><div class="sec-title">Applicant Summary</div><div class="sec-sub">// how many weapons each applicant holds</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Applicant</th><th>Student ID</th><th>Department</th><th>Active Issues</th><th>Overdue</th><th>Total Ever Issued</th></tr></thead>
+          <tbody id="personnelSummaryTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SQL TERMINAL -->
+    <div class="panel" id="panel-sql">
+      <div class="sec-hdr">
+        <div><div class="sec-title">SQL Terminal</div><div class="sec-sub">// live query runner + code reference — Ctrl+Enter to execute</div></div>
+      </div>
+      <div class="sql-runner">
+        <div class="sql-tabs">
+          <div class="sql-tab active" data-sp="run" onclick="sqlTab(this,'run')">▶ Run Query</div>
+          <div class="sql-tab" data-sp="ddl" onclick="sqlTab(this,'ddl')">DDL — Schema</div>
+          <div class="sql-tab" data-sp="proc" onclick="sqlTab(this,'proc')">Procedure</div>
+          <div class="sql-tab" data-sp="trig" onclick="sqlTab(this,'trig')">Triggers</div>
+          <div class="sql-tab" data-sp="cur" onclick="sqlTab(this,'cur')">Cursor</div>
+          <div class="sql-tab" data-sp="func" onclick="sqlTab(this,'func')">Functions</div>
+          <div class="sql-tab" data-sp="dml" onclick="sqlTab(this,'dml')">DML</div>
+          <div class="sql-tab" data-sp="joins" onclick="sqlTab(this,'joins')">Joins &amp; Subqueries</div>
+          <div class="sql-tab" data-sp="agg" onclick="sqlTab(this,'agg')">Aggregates &amp; Views</div>
+          <div class="sql-tab" data-sp="txn" onclick="sqlTab(this,'txn')">Transactions</div>
+        </div>
+
+        <div class="sql-panel active" id="sqlp-run">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:0.5rem;">// RUNS AGAINST LIVE WAIMS DATA — Ctrl+Enter to execute</div>
+          <textarea class="code-editor" id="sqlEditor" rows="5" spellcheck="false">SELECT * FROM Weapon WHERE condition = 'Operational';</textarea>
+          <div class="sql-bar">
+            <button class="btn btn-gold" onclick="runQuery()">▶ EXECUTE</button>
+            <button class="btn btn-outline" onclick="document.getElementById('sqlEditor').value='';clearResult()">✕ CLEAR</button>
+            <div class="sql-status" id="sqlStatus">Ready. Press Ctrl+Enter to run.</div>
+            <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('sqlEditor').value);toast('Copied!','s')">⧉ COPY</button>
+          </div>
+          <div class="sql-presets">
+            <span class="sql-preset-lbl">PRESETS:</span>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Weapon;`)">All Weapons</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Weapon WHERE condition = 'Operational';`)">Operational</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Issue WHERE status = 'OVERDUE';`)">Overdue</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Issue WHERE status = 'ISSUED';`)">Active Issues</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Personnel ORDER BY rank;`)">Personnel</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Maintenance WHERE outcome != 'COMPLETED';`)">Pending Maint.</button>
+            <button class="btn btn-outline btn-sm" onclick="preset(`SELECT * FROM Weapon WHERE quantity < 5;`)">Low Stock</button>
+          </div>
+          <div id="queryResultWrap" class="result-wrap" style="display:none">
+            <div class="result-meta" id="queryMeta"></div>
+            <div class="result-tbl-wrap" id="queryResult"></div>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-ddl">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">schema.sql</div><button class="btn btn-outline btn-sm" onclick="copyEl('ddlCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="ddlCode"><span class="kw">CREATE TABLE</span> <span class="tb">Category</span> (
+    category_id    <span class="fn">NUMBER</span>(<span class="nm">4</span>)    <span class="kw">PRIMARY KEY</span>,
+    category_name  <span class="fn">VARCHAR2</span>(<span class="nm">40</span>) <span class="kw">NOT NULL</span>,
+    description    <span class="fn">VARCHAR2</span>(<span class="nm">200</span>),
+    class_level    <span class="fn">VARCHAR2</span>(<span class="nm">20</span>)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tb">Weapon</span> (
+    weapon_id    <span class="fn">NUMBER</span>(<span class="nm">6</span>)    <span class="kw">PRIMARY KEY</span>,
+    name         <span class="fn">VARCHAR2</span>(<span class="nm">50</span>) <span class="kw">NOT NULL</span>,
+    category_id  <span class="fn">NUMBER</span>(<span class="nm">4</span>)    <span class="kw">REFERENCES</span> <span class="tb">Category</span>(category_id),
+    serial_no    <span class="fn">VARCHAR2</span>(<span class="nm">30</span>) <span class="kw">UNIQUE NOT NULL</span>,
+    quantity     <span class="fn">NUMBER</span>(<span class="nm">5</span>)    <span class="kw">DEFAULT</span> <span class="nm">1</span> <span class="kw">CHECK</span>(quantity &gt;= <span class="nm">0</span>),
+    condition    <span class="fn">VARCHAR2</span>(<span class="nm">20</span>) <span class="kw">CHECK</span>(condition <span class="kw">IN</span>
+                 (<span class="str">'Operational'</span>, <span class="str">'Maintenance'</span>, <span class="str">'Decommissioned'</span>)),
+    location     <span class="fn">VARCHAR2</span>(<span class="nm">40</span>)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tb">Personnel</span> (
+    personnel_id  <span class="fn">NUMBER</span>(<span class="nm">6</span>)    <span class="kw">PRIMARY KEY</span>,
+    name          <span class="fn">VARCHAR2</span>(<span class="nm">80</span>) <span class="kw">NOT NULL</span>,
+    rank          <span class="fn">VARCHAR2</span>(<span class="nm">30</span>),
+    unit          <span class="fn">VARCHAR2</span>(<span class="nm">50</span>),
+    clearance     <span class="fn">VARCHAR2</span>(<span class="nm">20</span>),
+    contact       <span class="fn">VARCHAR2</span>(<span class="nm">15</span>)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tb">Issue</span> (
+    issue_id      <span class="fn">NUMBER</span>(<span class="nm">8</span>)   <span class="kw">PRIMARY KEY</span>,
+    weapon_id     <span class="fn">NUMBER</span>(<span class="nm">6</span>)   <span class="kw">REFERENCES</span> <span class="tb">Weapon</span>(weapon_id),
+    personnel_id  <span class="fn">NUMBER</span>(<span class="nm">6</span>)   <span class="kw">REFERENCES</span> <span class="tb">Personnel</span>(personnel_id),
+    issue_date    <span class="fn">DATE</span>        <span class="kw">DEFAULT</span> <span class="fn">SYSDATE</span>,
+    return_date   <span class="fn">DATE</span>,
+    status        <span class="fn">VARCHAR2</span>(<span class="nm">12</span>) <span class="kw">DEFAULT</span> <span class="str">'ISSUED'</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tb">Maintenance</span> (
+    maintenance_id  <span class="fn">NUMBER</span>(<span class="nm">8</span>)   <span class="kw">PRIMARY KEY</span>,
+    weapon_id       <span class="fn">NUMBER</span>(<span class="nm">6</span>)   <span class="kw">REFERENCES</span> <span class="tb">Weapon</span>(weapon_id),
+    tech_id         <span class="fn">VARCHAR2</span>(<span class="nm">20</span>),
+    date_logged     <span class="fn">DATE</span>        <span class="kw">DEFAULT</span> <span class="fn">SYSDATE</span>,
+    type            <span class="fn">VARCHAR2</span>(<span class="nm">40</span>),
+    outcome         <span class="fn">VARCHAR2</span>(<span class="nm">20</span>),
+    next_due        <span class="fn">DATE</span>
+);</pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-proc">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">issue_weapon.sql — Stored Procedure</div><button class="btn btn-outline btn-sm" onclick="copyEl('procCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="procCode"><span class="kw">CREATE OR REPLACE PROCEDURE</span> <span class="fn">issue_weapon</span> (
+    p_weapon_id     <span class="kw">IN</span> <span class="tb">Weapon</span>.weapon_id%<span class="fn">TYPE</span>,
+    p_personnel_id  <span class="kw">IN</span> <span class="tb">Personnel</span>.personnel_id%<span class="fn">TYPE</span>
+) <span class="kw">AS</span>
+    v_qty   <span class="tb">Weapon</span>.quantity%<span class="fn">TYPE</span>;
+    v_cond  <span class="tb">Weapon</span>.condition%<span class="fn">TYPE</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> quantity, condition
+    <span class="kw">INTO</span>   v_qty, v_cond
+    <span class="kw">FROM</span>   <span class="tb">Weapon</span>
+    <span class="kw">WHERE</span>  weapon_id = p_weapon_id <span class="kw">FOR UPDATE</span>;
+
+    <span class="kw">IF</span> v_qty &lt; <span class="nm">1</span> <span class="kw">OR</span> v_cond != <span class="str">'Operational'</span> <span class="kw">THEN</span>
+        <span class="fn">RAISE_APPLICATION_ERROR</span>(<span class="nm">-20001</span>, <span class="str">'Weapon unavailable'</span>);
+    <span class="kw">END IF</span>;
+
+    <span class="kw">INSERT INTO</span> <span class="tb">Issue</span> (issue_id, weapon_id, personnel_id, issue_date, status)
+    <span class="kw">VALUES</span> (<span class="fn">issue_seq.NEXTVAL</span>, p_weapon_id, p_personnel_id, <span class="fn">SYSDATE</span>, <span class="str">'ISSUED'</span>);
+
+    <span class="kw">UPDATE</span> <span class="tb">Weapon</span> <span class="kw">SET</span> quantity = quantity - <span class="nm">1</span>
+    <span class="kw">WHERE</span>  weapon_id = p_weapon_id;
+
+    <span class="fn">COMMIT</span>;
+<span class="kw">EXCEPTION</span>
+    <span class="kw">WHEN OTHERS THEN ROLLBACK</span>; <span class="kw">RAISE</span>;
+<span class="kw">END</span>;
+<span class="nm">/</span>
+<span class="cm">-- Usage: EXEC issue_weapon(3, 2);</span></pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-trig">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">triggers.sql</div><button class="btn btn-outline btn-sm" onclick="copyEl('trigCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="trigCode"><span class="cm">-- TRIGGER 1: Schedule maintenance after 180 days</span>
+<span class="kw">CREATE OR REPLACE TRIGGER</span> <span class="fn">trg_maintenance_check</span>
+<span class="kw">AFTER INSERT ON</span> <span class="tb">Issue</span> <span class="kw">FOR EACH ROW</span>
+<span class="kw">DECLARE</span> v_last <span class="fn">DATE</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">MAX</span>(date_logged) <span class="kw">INTO</span> v_last
+    <span class="kw">FROM</span> <span class="tb">Maintenance</span> <span class="kw">WHERE</span> weapon_id = :NEW.weapon_id;
+
+    <span class="kw">IF</span> v_last <span class="kw">IS NULL OR</span> (<span class="fn">SYSDATE</span> - v_last) &gt; <span class="nm">180</span> <span class="kw">THEN</span>
+        <span class="kw">INSERT INTO</span> <span class="tb">Maintenance</span>
+            (maintenance_id, weapon_id, type, outcome, next_due)
+        <span class="kw">VALUES</span> (<span class="fn">maint_seq.NEXTVAL</span>, :NEW.weapon_id,
+                <span class="str">'SCHEDULED_INSPECTION'</span>, <span class="str">'PENDING'</span>, <span class="fn">SYSDATE</span>+<span class="nm">14</span>);
+    <span class="kw">END IF</span>;
+<span class="kw">END</span>; <span class="nm">/</span>
+
+<span class="cm">-- TRIGGER 2: Flag overdue returns automatically</span>
+<span class="kw">CREATE OR REPLACE TRIGGER</span> <span class="fn">trg_overdue_flag</span>
+<span class="kw">BEFORE UPDATE ON</span> <span class="tb">Issue</span> <span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> :NEW.return_date <span class="kw">IS NULL</span>
+       <span class="kw">AND</span> (<span class="fn">SYSDATE</span> - :OLD.issue_date) &gt; <span class="nm">30</span>
+       <span class="kw">AND</span> :NEW.status != <span class="str">'RETURNED'</span>
+    <span class="kw">THEN</span> :NEW.status := <span class="str">'OVERDUE'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span>; <span class="nm">/</span></pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-cur">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">cursor.sql — Inventory Report</div><button class="btn btn-outline btn-sm" onclick="copyEl('curCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="curCode"><span class="kw">DECLARE</span>
+    <span class="kw">CURSOR</span> <span class="fn">c_inv</span> <span class="kw">IS</span>
+        <span class="kw">SELECT</span> w.weapon_id, w.name, c.category_name,
+               w.quantity, w.condition, w.location
+        <span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+        <span class="kw">JOIN</span>   <span class="tb">Category</span> c <span class="kw">ON</span> w.category_id = c.category_id
+        <span class="kw">ORDER BY</span> c.category_name, w.name;
+    v_rec   c_inv%<span class="fn">ROWTYPE</span>;
+    v_total <span class="fn">NUMBER</span> := <span class="nm">0</span>;
+<span class="kw">BEGIN</span>
+    <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(<span class="str">'=== WAIMS INVENTORY REPORT ==='</span>);
+    <span class="kw">OPEN</span> <span class="fn">c_inv</span>;
+    <span class="kw">LOOP</span>
+        <span class="kw">FETCH</span> <span class="fn">c_inv</span> <span class="kw">INTO</span> v_rec;
+        <span class="kw">EXIT WHEN</span> <span class="fn">c_inv</span>%<span class="fn">NOTFOUND</span>;
+        v_total := v_total + v_rec.quantity;
+        <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(
+            <span class="fn">RPAD</span>(v_rec.name, <span class="nm">20</span>) || <span class="str">' | '</span> ||
+            <span class="fn">RPAD</span>(v_rec.category_name, <span class="nm">15</span>) ||
+            <span class="str">' | Qty:'</span> || v_rec.quantity ||
+            <span class="str">' | '</span> || v_rec.condition);
+    <span class="kw">END LOOP</span>;
+    <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(<span class="str">'Total types : '</span> || <span class="fn">c_inv</span>%<span class="fn">ROWCOUNT</span>);
+    <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(<span class="str">'Total units : '</span> || v_total);
+    <span class="kw">CLOSE</span> <span class="fn">c_inv</span>;
+<span class="kw">END</span>; <span class="nm">/</span></pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-func">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">functions.sql</div><button class="btn btn-outline btn-sm" onclick="copyEl('funcCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="funcCode"><span class="cm">-- FUNCTION 1: Operational stock for a category</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> <span class="fn">get_category_stock</span>(
+    p_cat_id <span class="kw">IN NUMBER</span>
+) <span class="kw">RETURN NUMBER IS</span>
+    v_total <span class="fn">NUMBER</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">NVL</span>(<span class="fn">SUM</span>(quantity), <span class="nm">0</span>) <span class="kw">INTO</span> v_total
+    <span class="kw">FROM</span>   <span class="tb">Weapon</span>
+    <span class="kw">WHERE</span>  category_id = p_cat_id <span class="kw">AND</span> condition = <span class="str">'Operational'</span>;
+    <span class="kw">RETURN</span> v_total;
+<span class="kw">END</span>; <span class="nm">/</span>
+
+<span class="cm">-- Usage:</span>
+<span class="kw">SELECT</span> category_name,
+       <span class="fn">get_category_stock</span>(category_id) <span class="kw">AS</span> op_units
+<span class="kw">FROM</span> <span class="tb">Category</span>;
+
+<span class="cm">-- FUNCTION 2: Is a weapon overdue for maintenance?</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> <span class="fn">is_maint_due</span>(
+    p_weapon_id <span class="kw">IN NUMBER</span>
+) <span class="kw">RETURN VARCHAR2 IS</span>
+    v_last <span class="fn">DATE</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">MAX</span>(date_logged) <span class="kw">INTO</span> v_last
+    <span class="kw">FROM</span>   <span class="tb">Maintenance</span>
+    <span class="kw">WHERE</span>  weapon_id = p_weapon_id;
+
+    <span class="kw">IF</span> v_last <span class="kw">IS NULL OR</span> (<span class="fn">SYSDATE</span> - v_last) &gt; <span class="nm">180</span>
+    <span class="kw">THEN RETURN</span> <span class="str">'YES — OVERDUE'</span>;
+    <span class="kw">ELSE RETURN</span> <span class="str">'NO — OK'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span>; <span class="nm">/</span>
+
+<span class="cm">-- Usage:</span>
+<span class="kw">SELECT</span> name, <span class="fn">is_maint_due</span>(weapon_id) <span class="kw">AS</span> maint_due
+<span class="kw">FROM</span>   <span class="tb">Weapon</span>;</pre>
+          </div>
+        </div>
+        <div class="sql-panel" id="sqlp-dml">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">dml.sql — INSERT / UPDATE / DELETE</div><button class="btn btn-outline btn-sm" onclick="copyEl('dmlCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="dmlCode"><span class="cm">-- ══ INSERT ══════════════════════════════════════════</span>
+<span class="cm">-- Insert a new category</span>
+<span class="kw">INSERT INTO</span> <span class="tb">Category</span> (category_id, category_name, description, class_level)
+<span class="kw">VALUES</span> (<span class="nm">6</span>, <span class="str">'Launcher'</span>, <span class="str">'Rocket and grenade launchers'</span>, <span class="str">'RESTRICTED'</span>);
+
+<span class="cm">-- Insert a new weapon</span>
+<span class="kw">INSERT INTO</span> <span class="tb">Weapon</span> (weapon_id, name, category_id, serial_no, quantity, condition, location)
+<span class="kw">VALUES</span> (<span class="nm">10</span>, <span class="str">'INSAS LMG'</span>, <span class="nm">1</span>, <span class="str">'IL-2025-001'</span>, <span class="nm">15</span>, <span class="str">'Operational'</span>, <span class="str">'Bay F-1'</span>);
+
+<span class="cm">-- Insert a new personnel record</span>
+<span class="kw">INSERT INTO</span> <span class="tb">Personnel</span> (personnel_id, name, rank, unit, clearance, contact)
+<span class="kw">VALUES</span> (<span class="nm">6</span>, <span class="str">'Brig. Suresh Mehta'</span>, <span class="str">'Brigadier'</span>, <span class="str">'HQ Command'</span>, <span class="str">'TOP SECRET'</span>, <span class="str">'9811100001'</span>);
+
+<span class="cm">-- Insert a maintenance record</span>
+<span class="kw">INSERT INTO</span> <span class="tb">Maintenance</span> (maintenance_id, weapon_id, tech_id, date_logged, type, outcome, next_due)
+<span class="kw">VALUES</span> (<span class="nm">5</span>, <span class="nm">10</span>, <span class="str">'TECH-07'</span>, <span class="fn">SYSDATE</span>, <span class="str">'Initial Inspection'</span>, <span class="str">'COMPLETED'</span>, <span class="fn">SYSDATE</span>+<span class="nm">180</span>);
+
+<span class="cm">-- ══ UPDATE ══════════════════════════════════════════</span>
+<span class="cm">-- Update weapon quantity after restocking</span>
+<span class="kw">UPDATE</span> <span class="tb">Weapon</span>
+<span class="kw">SET</span>    quantity = quantity + <span class="nm">10</span>
+<span class="kw">WHERE</span>  weapon_id = <span class="nm">1</span>;
+
+<span class="cm">-- Mark a weapon as decommissioned</span>
+<span class="kw">UPDATE</span> <span class="tb">Weapon</span>
+<span class="kw">SET</span>    condition = <span class="str">'Decommissioned'</span>, quantity = <span class="nm">0</span>
+<span class="kw">WHERE</span>  serial_no = <span class="str">'M1-2017-088'</span>;
+
+<span class="cm">-- Update maintenance outcome</span>
+<span class="kw">UPDATE</span> <span class="tb">Maintenance</span>
+<span class="kw">SET</span>    outcome = <span class="str">'COMPLETED'</span>, next_due = <span class="fn">SYSDATE</span> + <span class="nm">180</span>
+<span class="kw">WHERE</span>  maintenance_id = <span class="nm">1</span>;
+
+<span class="cm">-- Log a weapon return</span>
+<span class="kw">UPDATE</span> <span class="tb">Issue</span>
+<span class="kw">SET</span>    return_date = <span class="fn">SYSDATE</span>, status = <span class="str">'RETURNED'</span>
+<span class="kw">WHERE</span>  issue_id = <span class="nm">1</span> <span class="kw">AND</span> status = <span class="str">'ISSUED'</span>;
+
+<span class="cm">-- ══ DELETE ══════════════════════════════════════════</span>
+<span class="cm">-- Delete a decommissioned weapon record</span>
+<span class="kw">DELETE FROM</span> <span class="tb">Weapon</span>
+<span class="kw">WHERE</span>  condition = <span class="str">'Decommissioned'</span> <span class="kw">AND</span> quantity = <span class="nm">0</span>;
+
+<span class="cm">-- Delete old returned issue records (older than 1 year)</span>
+<span class="kw">DELETE FROM</span> <span class="tb">Issue</span>
+<span class="kw">WHERE</span>  status = <span class="str">'RETURNED'</span>
+  <span class="kw">AND</span>  return_date &lt; <span class="fn">SYSDATE</span> - <span class="nm">365</span>;</pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-joins">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">joins_subqueries.sql — JOINs &amp; Subqueries</div><button class="btn btn-outline btn-sm" onclick="copyEl('joinsCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="joinsCode"><span class="cm">-- ══ INNER JOIN ══════════════════════════════════════</span>
+<span class="cm">-- All issued weapons with officer names</span>
+<span class="kw">SELECT</span> w.name <span class="kw">AS</span> weapon, p.name <span class="kw">AS</span> officer,
+       p.rank, i.issue_date, i.status
+<span class="kw">FROM</span>   <span class="tb">Issue</span> i
+<span class="kw">JOIN</span>   <span class="tb">Weapon</span> w    <span class="kw">ON</span> i.weapon_id    = w.weapon_id
+<span class="kw">JOIN</span>   <span class="tb">Personnel</span> p <span class="kw">ON</span> i.personnel_id = p.personnel_id
+<span class="kw">ORDER BY</span> i.issue_date <span class="kw">DESC</span>;
+
+<span class="cm">-- ══ LEFT JOIN ════════════════════════════════════════</span>
+<span class="cm">-- All weapons, including those never issued</span>
+<span class="kw">SELECT</span> w.name, w.condition,
+       <span class="fn">NVL</span>(<span class="fn">TO_CHAR</span>(i.issue_date, <span class="str">'DD-MON-YYYY'</span>), <span class="str">'Never Issued'</span>) <span class="kw">AS</span> last_issued
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">LEFT JOIN</span> <span class="tb">Issue</span> i <span class="kw">ON</span> w.weapon_id = i.weapon_id;
+
+<span class="cm">-- ══ JOIN with Category ═══════════════════════════════</span>
+<span class="cm">-- Full inventory report with category name</span>
+<span class="kw">SELECT</span> w.weapon_id, w.name, c.category_name,
+       w.serial_no, w.quantity, w.condition, w.location
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">JOIN</span>   <span class="tb">Category</span> c <span class="kw">ON</span> w.category_id = c.category_id
+<span class="kw">ORDER BY</span> c.category_name, w.name;
+
+<span class="cm">-- ══ SUBQUERY ═════════════════════════════════════════</span>
+<span class="cm">-- Weapons that have never been maintained</span>
+<span class="kw">SELECT</span> name, condition
+<span class="kw">FROM</span>   <span class="tb">Weapon</span>
+<span class="kw">WHERE</span>  weapon_id <span class="kw">NOT IN</span> (
+    <span class="kw">SELECT DISTINCT</span> weapon_id <span class="kw">FROM</span> <span class="tb">Maintenance</span>
+);
+
+<span class="cm">-- Weapons issued by officers with TOP SECRET clearance</span>
+<span class="kw">SELECT</span> w.name, w.quantity
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">WHERE</span>  w.weapon_id <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> i.weapon_id
+    <span class="kw">FROM</span>   <span class="tb">Issue</span> i
+    <span class="kw">JOIN</span>   <span class="tb">Personnel</span> p <span class="kw">ON</span> i.personnel_id = p.personnel_id
+    <span class="kw">WHERE</span>  p.clearance = <span class="str">'TOP SECRET'</span>
+);
+
+<span class="cm">-- Correlated subquery: weapons below average quantity</span>
+<span class="kw">SELECT</span> name, quantity
+<span class="kw">FROM</span>   <span class="tb">Weapon</span>
+<span class="kw">WHERE</span>  quantity &lt; (
+    <span class="kw">SELECT</span> <span class="fn">AVG</span>(quantity) <span class="kw">FROM</span> <span class="tb">Weapon</span>
+    <span class="kw">WHERE</span>  condition = <span class="str">'Operational'</span>
+);</pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-agg">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">aggregates_views.sql — Aggregate Functions &amp; Views</div><button class="btn btn-outline btn-sm" onclick="copyEl('aggCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="aggCode"><span class="cm">-- ══ AGGREGATE FUNCTIONS ══════════════════════════════</span>
+<span class="cm">-- Total weapon units in arsenal</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_types,
+       <span class="fn">SUM</span>(quantity) <span class="kw">AS</span> total_units,
+       <span class="fn">AVG</span>(quantity) <span class="kw">AS</span> avg_stock,
+       <span class="fn">MAX</span>(quantity) <span class="kw">AS</span> max_stock,
+       <span class="fn">MIN</span>(quantity) <span class="kw">AS</span> min_stock
+<span class="kw">FROM</span> <span class="tb">Weapon</span>
+<span class="kw">WHERE</span> condition = <span class="str">'Operational'</span>;
+
+<span class="cm">-- ══ GROUP BY ═════════════════════════════════════════</span>
+<span class="cm">-- Units per category</span>
+<span class="kw">SELECT</span> c.category_name,
+       <span class="fn">COUNT</span>(w.weapon_id) <span class="kw">AS</span> weapon_types,
+       <span class="fn">SUM</span>(w.quantity)    <span class="kw">AS</span> total_units
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">JOIN</span>   <span class="tb">Category</span> c <span class="kw">ON</span> w.category_id = c.category_id
+<span class="kw">GROUP BY</span> c.category_name
+<span class="kw">ORDER BY</span> total_units <span class="kw">DESC</span>;
+
+<span class="cm">-- Issues per officer</span>
+<span class="kw">SELECT</span> p.name, p.rank,
+       <span class="fn">COUNT</span>(i.issue_id) <span class="kw">AS</span> total_Issues
+<span class="kw">FROM</span>   <span class="tb">Issue</span> i
+<span class="kw">JOIN</span>   <span class="tb">Personnel</span> p <span class="kw">ON</span> i.personnel_id = p.personnel_id
+<span class="kw">GROUP BY</span> p.name, p.rank
+<span class="kw">ORDER BY</span> total_Issues <span class="kw">DESC</span>;
+
+<span class="cm">-- ══ HAVING ═══════════════════════════════════════════</span>
+<span class="cm">-- Categories with more than 30 total units</span>
+<span class="kw">SELECT</span> c.category_name, <span class="fn">SUM</span>(w.quantity) <span class="kw">AS</span> total_units
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">JOIN</span>   <span class="tb">Category</span> c <span class="kw">ON</span> w.category_id = c.category_id
+<span class="kw">GROUP BY</span> c.category_name
+<span class="kw">HAVING</span> <span class="fn">SUM</span>(w.quantity) &gt; <span class="nm">30</span>
+<span class="kw">ORDER BY</span> total_units <span class="kw">DESC</span>;
+
+<span class="cm">-- Officers with 2 or more active Issues</span>
+<span class="kw">SELECT</span> p.name, <span class="fn">COUNT</span>(i.issue_id) <span class="kw">AS</span> active_Issues
+<span class="kw">FROM</span>   <span class="tb">Issue</span> i
+<span class="kw">JOIN</span>   <span class="tb">Personnel</span> p <span class="kw">ON</span> i.personnel_id = p.personnel_id
+<span class="kw">WHERE</span>  i.status <span class="kw">IN</span> (<span class="str">'ISSUED'</span>, <span class="str">'OVERDUE'</span>)
+<span class="kw">GROUP BY</span> p.name
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(i.issue_id) &gt;= <span class="nm">2</span>;
+
+<span class="cm">-- ══ VIEWS ════════════════════════════════════════════</span>
+<span class="cm">-- View: Active issue summary</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="fn">vw_active_Issues</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> i.issue_id, w.name <span class="kw">AS</span> weapon,
+       p.name <span class="kw">AS</span> officer, p.rank,
+       i.issue_date, i.status
+<span class="kw">FROM</span>   <span class="tb">Issue</span> i
+<span class="kw">JOIN</span>   <span class="tb">Weapon</span> w    <span class="kw">ON</span> i.weapon_id    = w.weapon_id
+<span class="kw">JOIN</span>   <span class="tb">Personnel</span> p <span class="kw">ON</span> i.personnel_id = p.personnel_id
+<span class="kw">WHERE</span>  i.status <span class="kw">IN</span> (<span class="str">'ISSUED'</span>, <span class="str">'OVERDUE'</span>);
+
+<span class="cm">-- View: Operational inventory</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="fn">vw_operational_stock</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> w.weapon_id, w.name, c.category_name,
+       w.quantity, w.location
+<span class="kw">FROM</span>   <span class="tb">Weapon</span> w
+<span class="kw">JOIN</span>   <span class="tb">Category</span> c <span class="kw">ON</span> w.category_id = c.category_id
+<span class="kw">WHERE</span>  w.condition = <span class="str">'Operational'</span>;
+
+<span class="cm">-- View: Maintenance due report</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="fn">vw_maintenance_due</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> w.name, m.tech_id, m.type,
+       m.next_due,
+       (<span class="fn">SYSDATE</span> - m.next_due) <span class="kw">AS</span> days_overdue
+<span class="kw">FROM</span>   <span class="tb">Maintenance</span> m
+<span class="kw">JOIN</span>   <span class="tb">Weapon</span> w <span class="kw">ON</span> m.weapon_id = w.weapon_id
+<span class="kw">WHERE</span>  m.next_due &lt; <span class="fn">SYSDATE</span>
+  <span class="kw">AND</span>  m.outcome != <span class="str">'COMPLETED'</span>;
+
+<span class="cm">-- Using a view</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="fn">vw_active_Issues</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="fn">vw_operational_stock</span> <span class="kw">WHERE</span> quantity &lt; <span class="nm">10</span>;</pre>
+          </div>
+        </div>
+
+        <div class="sql-panel" id="sqlp-txn">
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">transactions.sql — COMMIT / ROLLBACK / SAVEPOINT</div><button class="btn btn-outline btn-sm" onclick="copyEl('txnCode')">⧉ COPY</button></div>
+            <pre class="code-body" id="txnCode"><span class="cm">-- ══ TRANSACTION: Issue weapon with rollback on failure ══</span>
+<span class="kw">BEGIN</span>
+    <span class="fn">SAVEPOINT</span> before_issue;
+
+    <span class="cm">-- Step 1: Validate weapon availability</span>
+    <span class="kw">DECLARE</span>
+        v_qty    <span class="fn">NUMBER</span>;
+        v_cond   <span class="fn">VARCHAR2</span>(<span class="nm">20</span>);
+    <span class="kw">BEGIN</span>
+        <span class="kw">SELECT</span> quantity, condition
+        <span class="kw">INTO</span>   v_qty, v_cond
+        <span class="kw">FROM</span>   <span class="tb">Weapon</span>
+        <span class="kw">WHERE</span>  weapon_id = <span class="nm">3</span> <span class="kw">FOR UPDATE</span>;
+
+        <span class="kw">IF</span> v_qty &lt; <span class="nm">1</span> <span class="kw">OR</span> v_cond != <span class="str">'Operational'</span> <span class="kw">THEN</span>
+            <span class="fn">ROLLBACK TO</span> before_issue;
+            <span class="fn">RAISE_APPLICATION_ERROR</span>(<span class="nm">-20001</span>, <span class="str">'Weapon not available'</span>);
+        <span class="kw">END IF</span>;
+
+        <span class="cm">-- Step 2: Insert issue record</span>
+        <span class="kw">INSERT INTO</span> <span class="tb">Issue</span>
+            (issue_id, weapon_id, personnel_id, issue_date, status)
+        <span class="kw">VALUES</span>
+            (<span class="fn">issue_seq.NEXTVAL</span>, <span class="nm">3</span>, <span class="nm">2</span>, <span class="fn">SYSDATE</span>, <span class="str">'ISSUED'</span>);
+
+        <span class="fn">SAVEPOINT</span> after_insert;
+
+        <span class="cm">-- Step 3: Decrement stock</span>
+        <span class="kw">UPDATE</span> <span class="tb">Weapon</span>
+        <span class="kw">SET</span>    quantity = quantity - <span class="nm">1</span>
+        <span class="kw">WHERE</span>  weapon_id = <span class="nm">3</span>;
+
+        <span class="cm">-- All steps succeeded — commit</span>
+        <span class="fn">COMMIT</span>;
+        <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(<span class="str">'Transaction committed successfully.'</span>);
+
+    <span class="kw">EXCEPTION</span>
+        <span class="kw">WHEN OTHERS THEN</span>
+            <span class="fn">ROLLBACK TO</span> before_issue;
+            <span class="fn">DBMS_OUTPUT.PUT_LINE</span>(<span class="str">'Transaction rolled back: '</span> || <span class="fn">SQLERRM</span>);
+    <span class="kw">END</span>;
+<span class="kw">END</span>;
+<span class="nm">/</span>
+
+<span class="cm">-- ══ TRANSACTION: Bulk restock with SAVEPOINT ══════════</span>
+<span class="kw">BEGIN</span>
+    <span class="fn">SAVEPOINT</span> restock_start;
+
+    <span class="kw">UPDATE</span> <span class="tb">Weapon</span> <span class="kw">SET</span> quantity = quantity + <span class="nm">20</span> <span class="kw">WHERE</span> weapon_id = <span class="nm">1</span>;
+    <span class="fn">SAVEPOINT</span> after_weapon1;
+
+    <span class="kw">UPDATE</span> <span class="tb">Weapon</span> <span class="kw">SET</span> quantity = quantity + <span class="nm">15</span> <span class="kw">WHERE</span> weapon_id = <span class="nm">2</span>;
+    <span class="fn">SAVEPOINT</span> after_weapon2;
+
+    <span class="kw">UPDATE</span> <span class="tb">Weapon</span> <span class="kw">SET</span> quantity = quantity + <span class="nm">10</span> <span class="kw">WHERE</span> weapon_id = <span class="nm">3</span>;
+
+    <span class="fn">COMMIT</span>; <span class="cm">-- All updates committed together</span>
+
+<span class="kw">EXCEPTION</span>
+    <span class="kw">WHEN OTHERS THEN</span>
+        <span class="fn">ROLLBACK TO</span> restock_start; <span class="cm">-- Roll back all if any fails</span>
+        <span class="fn">RAISE</span>;
+<span class="kw">END</span>;
+<span class="nm">/</span>
+
+<span class="cm">-- ══ ACID PROPERTIES DEMONSTRATED ════════════════════</span>
+<span class="cm">-- Atomicity  : All steps commit together or all rollback</span>
+<span class="cm">-- Consistency: CHECK constraints prevent invalid data</span>
+<span class="cm">-- Isolation  : FOR UPDATE locks rows during transaction</span>
+<span class="cm">-- Durability : COMMIT writes permanently to storage</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NORMALIZATION -->
+    <div class="panel" id="panel-normalization">
+      <div class="sec-hdr"><div><div class="sec-title">Normalization</div><div class="sec-sub">// 1NF → 2NF → 3NF with functional dependencies</div></div></div>
+
+      <div class="tbl-wrap" style="margin-bottom:1.2rem">
+        <div class="tbl-toolbar"><div class="tbl-info">// FIRST NORMAL FORM (1NF) — All attributes atomic, no repeating groups</div></div>
+        <div style="padding:1rem 1.2rem">
+          <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:0.75rem">A relation is in 1NF if every attribute contains only atomic (indivisible) values and each row is unique.</div>
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">Before 1NF — violation example</div></div>
+            <pre class="code-body">WeaponID | WeaponName | Categories (VIOLATION — multi-valued)
+---------|------------|----------------------------------
+  1      | AK-47      | Assault Rifle, SMG        ← NOT atomic
+  2      | Glock 19   | Pistol, Sidearm           ← NOT atomic</pre>
+          </div>
+          <div style="margin-top:0.75rem" class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">After 1NF — WAIMS Weapon table</div></div>
+            <pre class="code-body">WeaponID | WeaponName | CategoryID | SerialNo       | Quantity | Condition
+---------|------------|------------|----------------|----------|-----------
+  1      | AK-47      |     1      | AK-2021-001    |    45    | Operational
+  2      | Glock 19   |     2      | GL-2022-007    |    80    | Operational
+<span class="cm">-- ✓ All values atomic, each row uniquely identified by WeaponID (PK)</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-bottom:1.2rem">
+        <div class="tbl-toolbar"><div class="tbl-info">// SECOND NORMAL FORM (2NF) — No partial dependencies on composite keys</div></div>
+        <div style="padding:1rem 1.2rem">
+          <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:0.75rem">A relation is in 2NF if it is in 1NF and every non-key attribute is fully functionally dependent on the entire primary key.</div>
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">Before 2NF — partial dependency violation</div></div>
+            <pre class="code-body">Issue (IssueID, WeaponID, PersonnelID, WeaponName, PersonnelRank, IssueDate)
+<span class="cm">-- Composite PK = (WeaponID, PersonnelID)</span>
+<span class="cm">-- WeaponName depends only on WeaponID     ← PARTIAL DEPENDENCY</span>
+<span class="cm">-- PersonnelRank depends only on PersonnelID ← PARTIAL DEPENDENCY</span></pre>
+          </div>
+          <div style="margin-top:0.75rem" class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">After 2NF — decomposed into separate tables</div></div>
+            <pre class="code-body">Weapon    (WeaponID PK, WeaponName, CategoryID, Quantity, Condition, Location)
+Personnel (PersonnelID PK, Name, Rank, Unit, Clearance, Contact)
+Issue     (IssueID PK, WeaponID FK, PersonnelID FK, IssueDate, ReturnDate, Status)
+<span class="cm">-- ✓ Each non-key attribute depends on the FULL primary key of its table</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-bottom:1.2rem">
+        <div class="tbl-toolbar"><div class="tbl-info">// THIRD NORMAL FORM (3NF) — No transitive dependencies</div></div>
+        <div style="padding:1rem 1.2rem">
+          <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:0.75rem">A relation is in 3NF if it is in 2NF and no non-key attribute depends on another non-key attribute (no transitive dependency).</div>
+          <div class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">Before 3NF — transitive dependency</div></div>
+            <pre class="code-body">Weapon (WeaponID, WeaponName, CategoryID, CategoryName, CategoryClass)
+<span class="cm">-- WeaponID → CategoryID → CategoryName  ← TRANSITIVE DEPENDENCY</span>
+<span class="cm">-- CategoryName depends on CategoryID, not directly on WeaponID</span></pre>
+          </div>
+          <div style="margin-top:0.75rem" class="code-block">
+            <div class="code-hdr"><div class="code-dots"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div></div><div class="code-file">After 3NF — Category extracted as separate table</div></div>
+            <pre class="code-body">Category (CategoryID PK, CategoryName, Description, ClassLevel)
+Weapon   (WeaponID PK, WeaponName, CategoryID FK, Quantity, Condition, Location)
+<span class="cm">-- ✓ No non-key attribute depends on another non-key attribute</span>
+<span class="cm">-- ✓ All 5 tables satisfy 3NF — minimal redundancy achieved</span></pre>
+          </div>
+          <div style="margin-top:1rem;padding:1rem;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:3px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;">// FUNCTIONAL DEPENDENCIES — FINAL SCHEMA</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.78rem;line-height:2;color:var(--text-dim)">
+              CategoryID → CategoryName, Description, ClassLevel<br>
+              WeaponID → WeaponName, CategoryID, SerialNo, Quantity, Condition, Location<br>
+              PersonnelID → Name, Rank, Unit, Clearance, Contact<br>
+              IssueID → WeaponID, PersonnelID, IssueDate, ReturnDate, Status<br>
+              MaintenanceID → WeaponID, TechID, DateLogged, Type, Outcome, NextDue
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div class="tbl-info">// ER TO TABLE MAPPING — Relationship Summary</div></div>
+        <div style="padding:1rem 1.2rem">
+          <table>
+            <thead><tr><th>Relationship</th><th>Type</th><th>Resolution</th><th>FK</th></tr></thead>
+            <tbody>
+              <tr><td>Category → Weapon</td><td><span class="badge bb">1 : MANY</span></td><td>CategoryID as FK in Weapon</td><td class="mono">Weapon.CategoryID → Category.CategoryID</td></tr>
+              <tr><td>Weapon ↔ Personnel</td><td><span class="badge bp">MANY : MANY</span></td><td>Resolved via Issue table</td><td class="mono">Issue.WeaponID, Issue.PersonnelID</td></tr>
+              <tr><td>Weapon → Maintenance</td><td><span class="badge bb">1 : MANY</span></td><td>WeaponID as FK in Maintenance</td><td class="mono">Maintenance.WeaponID → Weapon.WeaponID</td></tr>
+              <tr><td>Personnel → Issue</td><td><span class="badge bb">1 : MANY</span></td><td>PersonnelID as FK in Issue</td><td class="mono">Issue.PersonnelID → Personnel.PersonnelID</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT LOG -->
+    <div class="panel" id="panel-audit">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Audit Log</div><div class="sec-sub">// real trigger &amp; procedure execution records</div></div>
+        <button class="btn btn-outline btn-sm" onclick="loadAudit()">↺ REFRESH</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Action</th><th>Table</th><th>Record ID</th><th>Description</th><th>Timestamp</th></tr></thead>
+          <tbody id="auditTbody"><tr class="loading-row"><td colspan="6">LOADING...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="panel-profile">
+      <div class="sec-hdr"><div><div class="sec-title">My Profile</div><div class="sec-sub">// session info</div></div></div>
+      <div class="tbl-wrap">
+        <div class="profile-wrap">
+          <div class="profile-top">
+            <div class="profile-avatar" id="profAvatar">—</div>
+            <div class="profile-info">
+              <h2 id="profName">—</h2>
+              <div id="profBadges" style="margin-top:0.4rem;display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+            </div>
+          </div>
+          <div class="profile-fields" id="profFields"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-weapon">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('weapon')">✕</button>
+    <div class="modal-title">Add Weapon</div>
+    <div class="form-row">
+      <div class="form-field"><label>Weapon Name</label><input id="wName" placeholder="e.g. AK-47"></div>
+      <div class="form-field"><label>Category</label><select id="wCategory"><option>Assault Rifle</option><option>Pistol</option><option>Sniper Rifle</option><option>SMG</option><option>LMG</option><option>Shotgun</option><option>Launcher</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Serial No.</label><input id="wSerial" placeholder="e.g. AK-2025-099"></div>
+      <div class="form-field"><label>Quantity</label><input id="wQty" type="number" min="0" value="1"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Condition</label><select id="wCondition"><option>Operational</option><option>Maintenance</option><option>Decommissioned</option></select></div>
+      <div class="form-field"><label>Location</label><input id="wLocation" placeholder="e.g. Bay A-3"></div>
+    </div>
+    <div class="modal-error" id="wErr"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('weapon')">CANCEL</button><button class="btn btn-gold" onclick="submitWeapon()">SAVE WEAPON</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-personnel">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('personnel')">✕</button>
+    <div class="modal-title">Add Personnel</div>
+    <div class="form-field"><label>Full Name</label><input id="pName" placeholder="e.g. Maj. Arjun Singh"></div>
+    <div class="form-row">
+      <div class="form-field"><label>Rank</label><select id="pRank"><option>General</option><option>Brigadier</option><option>Colonel</option><option>Major</option><option>Captain</option><option>Lieutenant</option><option>Sergeant</option><option>Corporal</option></select></div>
+      <div class="form-field"><label>Unit</label><input id="pUnit" placeholder="e.g. Alpha Battalion"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Clearance</label><select id="pClearance"><option>TOP SECRET</option><option>SECRET</option><option>CONFIDENTIAL</option><option>RESTRICTED</option></select></div>
+      <div class="form-field"><label>Contact</label><input id="pContact" placeholder="10-digit number"></div>
+    </div>
+    <div class="modal-error" id="pErr"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('personnel')">CANCEL</button><button class="btn btn-gold" onclick="submitPersonnel()">SAVE PERSONNEL</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-issue">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('issue')">✕</button>
+    <div class="modal-title">Issue Weapon</div>
+    <div class="form-field"><label>Select Weapon (Operational &amp; In Stock)</label><select id="issueWeaponId"><option value="">— Select —</option></select></div>
+  
+    <div class="form-field">
+
+    <label>Name</label>
+
+    <input
+        type="text"
+        id="issueName"
+        placeholder="Enter Full Name"
+    >
+
+</div>
+
+<div class="form-field">
+
+    <label>Citizen ID</label>
+
+    <input
+        type="text"
+        id="issueCitizen"
+        placeholder="Enter Citizen ID"
+    >
+
+</div>
+    <div class="modal-error" id="iErr"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('issue')">CANCEL</button><button class="btn btn-gold" onclick="submitIssue()">ISSUE NOW</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-maint">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('maint')">✕</button>
+    <div class="modal-title">Log Maintenance</div>
+    <div class="form-field"><label>Select Weapon</label><select id="maintWeaponId"><option value="">— Select —</option></select></div>
+    <div class="form-row">
+      <div class="form-field"><label>Technician ID</label><input id="maintTechId" placeholder="e.g. TECH-05"></div>
+      <div class="form-field"><label>Type</label><select id="maintType"><option>Scheduled Inspection</option><option>Cleaning</option><option>Repair</option><option>Scope Calibration</option><option>Decommission Audit</option><option>Parts Replacement</option></select></div>
+    </div>
+    <div class="modal-error" id="mErr"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('maint')">CANCEL</button><button class="btn btn-gold" onclick="submitMaint()">LOG MAINTENANCE</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API=window.location.origin, TOKEN=localStorage.getItem('waims_token'), USER=JSON.parse(localStorage.getItem('waims_user')||'null');
+if(!TOKEN){window.location.href='/';}
+let allWeapons=[],allPersonnel=[],allIssues=[],allMaint=[];
+let sorts={weapons:{k:'weapon_id',a:true},personnel:{k:'name',a:true},Issues:{k:'issue_id',a:false},maint:{k:'maint_id',a:false}};
+
+const PANELS={dashboard:{t:'DASHBOARD',c:'// overview'},inventory:{t:'INVENTORY',c:'// weapon assets'},personnel:{t:'PERSONNEL',c:'// authorized officers'},Issues:{t:'ISSUE & RETURN',c:'// movement log'},maintenance:{t:'MAINTENANCE',c:'// service records'},audit:{t:'AUDIT LOG',c:'// real trigger & procedure log'},
+tracker:{t:'WHO HAS WHAT',c:'// live personnel-weapon tracker'},
+sql:{t:'SQL TERMINAL',c:'// Ctrl+Enter to execute'},profile:{t:'MY PROFILE',c:'// session'}};
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if(USER){
+    document.getElementById('sbName').textContent=USER.full_name;
+    document.getElementById('sbRole').textContent=USER.role;
+    document.getElementById('sbClear').textContent='// '+USER.clearance;
+    if(USER.role!=='Admin'){['addWeaponBtn','addPersonnelBtn'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
+    buildProfile();
+  }
+  updateClock();setInterval(updateClock,1000);
+  document.querySelectorAll('.sb-item').forEach(el=>el.addEventListener('click',()=>switchPanel(el.dataset.panel)));
+  document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+  document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter')runQuery();});
+  loadAll();
+});
+
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleString('en-IN',{hour12:false,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function logout(){localStorage.removeItem('waims_token');localStorage.removeItem('waims_user');window.location.href='/';}
+
+function switchPanel(id){
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active',el.dataset.panel===id));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.toggle('active',el.id==='panel-'+id));
+  const m=PANELS[id]||{t:id.toUpperCase(),c:'// section'};
+  document.getElementById('panelTitle').textContent=m.t;
+  document.getElementById('panelCrumb').textContent=m.c;
+}
+
+async function apiFetch(path,opts={}){
+  const res=await fetch(API+path,{...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(res.status===401){logout();return null;}
+  return res;
+}
+
+async function loadAll(){await Promise.all([loadStats(),loadWeapons(),loadPersonnel(),loadIssues(),loadMaint(),loadTracker(),loadAudit()]);}
+
+async function loadStats(){
+  const r=await apiFetch('/api/stats');if(!r)return;
+  const d=await r.json();
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card" style="--accent:var(--gold)"><div class="stat-num">${d.total_assets}</div><div class="stat-lbl">Total Units</div><div class="stat-sub">${d.total_weapons} weapon types</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-num">${d.operational}</div><div class="stat-lbl">Operational</div><div class="stat-sub">types ready</div></div>
+    <div class="stat-card" style="--accent:var(--blue2)"><div class="stat-num">${d.issued_now}</div><div class="stat-lbl">Issued</div><div class="stat-sub">active records</div></div>
+    <div class="stat-card" style="--accent:var(--red)"><div class="stat-num">${d.overdue}</div><div class="stat-lbl">Overdue</div><div class="stat-sub">pending return</div></div>
+    <div class="stat-card" style="--accent:var(--yellow)"><div class="stat-num">${d.in_maintenance}</div><div class="stat-lbl">Maintenance</div><div class="stat-sub">in service</div></div>
+    <div class="stat-card" style="--accent:var(--purple)"><div class="stat-num">${d.total_personnel}</div><div class="stat-lbl">Personnel</div><div class="stat-sub">authorized</div></div>`;
+  const b=document.getElementById('overdueBadge');
+  b.style.display=d.overdue>0?'inline':'none';b.textContent=d.overdue;
+}
+async function loadWeapons(){
+
+    const r = await fetch(
+    "http://127.0.0.1:8000/api/weapons",
+    {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("waims_token")
+        }
+    }
+);
+console.log(await r.clone().json());
+    allWeapons = await r.json();
+
+    console.log(allWeapons);
+
+    filterWeapons();
+
+    const dropdown =
+        document.getElementById(
+            "issueWeaponId"
+        );
+
+    dropdown.innerHTML =
+        '<option value="">— Select —</option>';
+
+    allWeapons
+    .filter(
+        w=>w.condition==='Operational'
+        && w.quantity>0
+    )
+    .forEach(w=>{
+
+        dropdown.innerHTML += `
+
+            <option value="${w.weapon_id}">
+
+                ${w.name} - Qty:${w.quantity}
+
+            </option>
+
+        `;
+
+    });
+
+  populateSel('maintWeaponId',allWeapons,w=>w.name,'weapon_id');
+  buildBarChart();buildDonut();
+}
+function filterWeapons(){
+  const q=document.getElementById('weaponSearch').value.toLowerCase();
+  const c=document.getElementById('condFilter').value;
+  let list=allWeapons.filter(w=>(!q||w.name.toLowerCase().includes(q)||w.category.toLowerCase().includes(q))&&(!c||w.condition===c));
+  list=sortArr(list,sorts.weapons);
+  document.getElementById('weaponCount').textContent=`${list.length} of ${allWeapons.length} records`;
+  const isAdmin=USER?.role==='Admin';
+  document.getElementById('weaponsTbody').innerHTML=list.length?list.map(w=>`
+    <tr><td class="mono">${w.weapon_id}</td><td><strong>${w.name}</strong></td><td>${w.category}</td>
+    <td class="mono">${w.serial_no}</td>
+    <td><strong style="color:${w.quantity<5?'var(--red)':w.quantity<15?'var(--yellow)':'inherit'}">${w.quantity}</strong></td>
+    <td>${condBadge(w.condition)}</td><td style="color:var(--text-dim);font-size:0.82rem">${w.location}</td>
+    <td>${isAdmin?`<button class="btn btn-red btn-sm" onclick="delWeapon(${w.weapon_id})">DEL</button>`:'—'}</td></tr>`).join('')
+    :'<tr class="empty-row"><td colspan="8">NO RECORDS MATCH FILTER</td></tr>';
+}
+async function delWeapon(id){
+  if(!confirm('Delete this weapon record?'))return;
+  const r=await apiFetch(`/api/weapons/${id}`,{method:'DELETE'});
+  if(r?.ok){toast('Deleted.','s');await loadWeapons();await loadStats();}else toast('Error.','e');
+}
+async function submitWeapon(){
+  const body={name:v('wName'),category:v('wCategory'),serial_no:v('wSerial'),quantity:parseInt(v('wQty')||0),condition:v('wCondition'),location:v('wLocation')};
+  if(!body.name||!body.serial_no||!body.location)return merr('wErr','Fill all fields.');
+  const r=await apiFetch('/api/weapons',{method:'POST',body:JSON.stringify(body)});
+  if(r?.ok){closeModal('weapon');toast('Weapon added!','s');await loadWeapons();await loadStats();}
+  else{const e=await r.json();merr('wErr',e.detail||'Error.');}
+}
+
+async function loadPersonnel(){
+  const r=await apiFetch('/api/personnel');if(!r)return;
+  allPersonnel=await r.json();filterPersonnel();
+  populateSel('issuePersonnelId',allPersonnel,p=>`${p.name} (${p.rank})`,'personnel_id');
+}
+function filterPersonnel(){
+  const q=document.getElementById('personnelSearch').value.toLowerCase();
+  let list=allPersonnel.filter(p=>!q||p.name.toLowerCase().includes(q)||p.unit.toLowerCase().includes(q));
+  list=sortArr(list,sorts.personnel);
+  document.getElementById('personnelCount').textContent=`${list.length} of ${allPersonnel.length} records`;
+  document.getElementById('personnelTbody').innerHTML=list.length?list.map(p=>`
+    <tr><td class="mono">${p.personnel_id}</td><td><strong>${p.name}</strong></td><td>${p.rank}</td><td>${p.unit}</td><td>${clearBadge(p.clearance)}</td><td class="mono">${p.contact}</td></tr>`).join('')
+    :'<tr class="empty-row"><td colspan="6">NO RECORDS FOUND</td></tr>';
+}
+async function submitPersonnel(){
+  const body={name:v('pName'),rank:v('pRank'),unit:v('pUnit'),clearance:v('pClearance'),contact:v('pContact')};
+  if(!body.name||!body.unit||!body.contact)return merr('pErr','Fill all fields.');
+  const r=await apiFetch('/api/personnel',{method:'POST',body:JSON.stringify(body)});
+  if(r?.ok){closeModal('personnel');toast('Personnel added!','s');await loadPersonnel();await loadStats();}
+  else{const e=await r.json();merr('pErr',e.detail||'Admin access required.');}
+}
+
+async function loadIssues(){
+
+    const r = await apiFetch('/api/issues');
+
+    if(!r.ok){
+        console.error("Issues API failed");
+        return;
+    }
+
+    const data = await r.json();
+
+    console.log(data);
+
+    allIssues = Array.isArray(data) ? data : [];
+
+    filterIssues();
+
+    buildActivity();
+}
+function filterIssues(){
+  const f=document.getElementById('issueFilter').value;
+  let list=allIssues.filter(i=>!f||i.status===f);
+  list=sortArr(list,sorts.Issues);
+  document.getElementById('issueCount').textContent=`${list.length} of ${allIssues.length} records`;
+  document.getElementById('IssuesTbody').innerHTML=list.length?list.map(i=>`
+    <tr><td class="mono">${i.issue_id}</td><td><strong>${i.weapon_name}</strong></td><td>${i.officer_name}</td>
+    <td class="mono">${i.issue_date}</td><td class="mono">${i.return_date||'—'}</td><td>${statusBadge(i.status)}</td>
+    <td>${(i.status==='ISSUED'||i.status==='OVERDUE')?`<button class="btn btn-green btn-sm" onclick="returnIssue(${i.issue_id})">↩ RETURN</button>`:'—'}</td></tr>`).join('')
+    :'<tr class="empty-row"><td colspan="7">NO RECORDS MATCH FILTER</td></tr>';
+}
+async function submitIssue() {
+
+    const weapon_id =
+        Number(document.getElementById("issueWeaponId").value);
+
+    const officer_name =
+        document.getElementById("issueName").value;
+
+    const citizen_id =
+        document.getElementById("issueCitizen").value;
+
+    if (!weapon_id || !officer_name || !citizen_id) {
+        alert("Fill all fields");
+        return;
+    }
+
+    const body = {
+        weapon_id: weapon_id,
+        personnel_id: 1
+    };
+
+    const r = await apiFetch(
+        "/api/issues",
+        {
+            method: "POST",
+            body: JSON.stringify(body)
+        }
+    );
+
+    const d = await r.json();
+
+    if (r.ok) {
+
+        alert("Weapon Issued Successfully");
+
+        closeModal("issue");
+
+        loadIssues();
+
+    } else {
+
+        alert(d.detail || "Issue failed");
+    }
+}
+function filterMaint(){
+  const f=document.getElementById('maintFilter').value;
+  let list=allMaint.filter(m=>!f||m.outcome===f);
+  list=sortArr(list,sorts.maint);
+  document.getElementById('maintCount').textContent=`${list.length} of ${allMaint.length} records`;
+  document.getElementById('maintTbody').innerHTML=list.length?list.map(m=>`
+    <tr><td class="mono">${m.maint_id}</td><td><strong>${m.weapon_name}</strong></td><td class="mono">${m.tech_id}</td>
+    <td class="mono">${m.date}</td><td style="font-size:0.83rem">${m.type}</td><td>${outcomeBadge(m.outcome)}</td>
+    <td class="mono">${m.next_due||'—'}</td></tr>`).join('')
+    :'<tr class="empty-row"><td colspan="7">NO RECORDS MATCH FILTER</td></tr>';
+}
+async function submitMaint(){
+  const weapon_id=parseInt(document.getElementById('maintWeaponId').value);
+  const tech_id=v('maintTechId'),type=v('maintType');
+  if(!weapon_id||!tech_id)return merr('mErr','Select weapon and enter tech ID.');
+  const r=await apiFetch('/api/maintenance',{method:'POST',body:JSON.stringify({weapon_id,tech_id,type})});
+  if(r?.ok){closeModal('maint');toast('Maintenance logged!','s');await loadMaint();await loadStats();await loadWeapons();}
+  else{const e=await r.json();merr('mErr',e.detail||'Error.');}
+}
+
+// SQL Terminal
+function sqlTab(el,id){
+  document.querySelectorAll('.sql-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sql-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sqlp-'+id).classList.add('active');
+}
+function preset(q){document.getElementById('sqlEditor').value=q;}
+function clearResult(){document.getElementById('queryResultWrap').style.display='none';}
+async function runQuery(){
+  const query=document.getElementById('sqlEditor').value.trim();if(!query)return;
+  document.getElementById('sqlStatus').textContent='⟳ Executing…';
+  const r=await apiFetch('/api/query',{method:'POST',body:JSON.stringify({query})});
+  if(!r){document.getElementById('sqlStatus').textContent='Connection error.';return;}
+  const d=await r.json();
+  document.getElementById('sqlStatus').textContent=`✓ ${d.row_count} row${d.row_count!==1?'s':''} · ${d.execution_ms} ms`;
+  const wrap=document.getElementById('queryResultWrap');wrap.style.display='block';
+  document.getElementById('queryMeta').textContent=`// ${d.row_count} row${d.row_count!==1?'s':''} returned · ${d.execution_ms} ms execution`;
+  if(!d.rows.length){document.getElementById('queryResult').innerHTML='<div style="padding:1rem;text-align:center;color:var(--text-dim);font-family:Share Tech Mono,monospace;font-size:0.7rem">Empty result set</div>';return;}
+  const cols=Object.keys(d.rows[0]);
+  document.getElementById('queryResult').innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${d.rows.map(r=>`<tr>${cols.map(c=>`<td>${r[c]??'NULL'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function copyEl(id){navigator.clipboard.writeText(document.getElementById(id).innerText);toast('Copied!','s');}
+
+// Charts
+function buildBarChart(){
+  if(!allWeapons.length)return;
+  const cats={};allWeapons.forEach(w=>{cats[w.category]=(cats[w.category]||0)+w.quantity;});
+  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const max=entries[0]?.[1]||1;
+  const colors=['var(--gold)','var(--blue2)','var(--green)','var(--purple)','var(--yellow)','var(--red)'];
+  document.getElementById('barChart').innerHTML=entries.map(([cat,qty],i)=>`
+    <div class="bar-item">
+      <div class="bar-label" title="${cat}">${cat}</div>
+      <div class="bar-track"><div class="bar-fill" style="background:${colors[i%colors.length]}" data-w="${Math.round(qty/max*100)}"></div></div>
+      <div class="bar-val">${qty}</div></div>`).join('');
+  requestAnimationFrame(()=>{document.querySelectorAll('.bar-fill').forEach(el=>{el.style.width=el.dataset.w+'%';});});
+}
+function buildDonut(){
+  if(!allWeapons.length)return;
+  const op=allWeapons.filter(w=>w.condition==='Operational').length;
+  const mt=allWeapons.filter(w=>w.condition==='Maintenance').length;
+  const dc=allWeapons.filter(w=>w.condition==='Decommissioned').length;
+  const total=op+mt+dc||1;
+  function arc(p,off,color){
+    const r=38,cx=50,cy=50,c=2*Math.PI*r;
+    const dash=(p/100)*c,gap=c-dash,rot=off*3.6-90;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="12" stroke-dasharray="${dash} ${gap}" transform="rotate(${rot} ${cx} ${cy})" stroke-linecap="butt"/>`;
+  }
+  let off=0,segs='';
+  [[Math.round(op/total*100),'var(--green)'],[Math.round(mt/total*100),'var(--yellow)'],[Math.round(dc/total*100),'var(--text-dim)']].forEach(([p,c])=>{segs+=arc(p,off,c);off+=p;});
+  document.getElementById('donutWrap').innerHTML=`
+    <svg class="donut-svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="var(--bg3)" stroke-width="12"/>
+      ${segs}
+      <text x="50" y="46" text-anchor="middle" font-family="Bebas Neue" font-size="16" fill="var(--gold)">${total}</text>
+      <text x="50" y="57" text-anchor="middle" font-family="Share Tech Mono" font-size="5" fill="var(--text-dim)">TYPES</text>
+    </svg>
+    <div class="donut-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Operational: ${op}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Maintenance: ${mt}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--text-dim)"></div>Decommissioned: ${dc}</div>
+    </div>`;
+}
+function buildActivity(){
+  const c={ISSUED:'var(--blue2)',RETURNED:'var(--green)',OVERDUE:'var(--red)'};
+  document.getElementById('activityList').innerHTML=[...allIssues].reverse().slice(0,6).map(i=>`
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${c[i.status]||'var(--text-dim)'}"></div>
+      <div><div class="activity-text"><strong>${i.weapon_name}</strong> → ${i.officer_name}</div>
+      <div class="activity-meta">${i.issue_date} &nbsp; ${statusBadge(i.status)}</div></div>
+    </div>`).join('')||'<div style="padding:1rem;text-align:center;color:var(--text-dim);font-family:Share Tech Mono,monospace;font-size:0.7rem">No activity</div>';
+}
+
+function buildProfile(){
+  if(!USER)return;
+ const ini =
+    (USER?.full_name || "Admin")
+    .split(' ')
+    .map(w=>w[0])
+    .join('')
+    .slice(0,2)
+    .toUpperCase();
+  document.getElementById('profAvatar').textContent=ini;
+  document.getElementById('profName').textContent=USER.full_name;
+  document.getElementById('profBadges').innerHTML=`<span class="badge bb">${USER.role.toUpperCase()}</span>`;
+  document.getElementById('profFields').innerHTML=`
+    <div class="pf"><label>Username</label><p>${USER.username}</p></div>
+    <div class="pf"><label>Role</label><p>${USER.role}</p></div>
+    <div class="pf"><label>Clearance</label><p>${USER.clearance}</p></div>
+    <div class="pf"><label>Session Token (partial)</label><p style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--text-dim)">${TOKEN.slice(0,28)}…</p></div>`;
+}
+
+// Sorting
+function srt(type,key){
+  if(sorts[type].k===key)sorts[type].a=!sorts[type].a;else{sorts[type].k=key;sorts[type].a=true;}
+  ({weapons:filterWeapons,personnel:filterPersonnel,Issues:filterIssues,maint:filterMaint})[type]?.();
+}
+function sortArr(arr,{k,a}){
+  return[...arr].sort((x,y)=>{let av=x[k],bv=y[k];
+    if(typeof av==='string')av=av.toLowerCase();if(typeof bv==='string')bv=bv.toLowerCase();
+    if(av==null)return 1;if(bv==null)return -1;
+    return a?(av>bv?1:av<bv?-1:0):(av<bv?1:av>bv?-1:0);});
+}
+
+// Helpers
+const v=id=>document.getElementById(id)?.value??'';
+function populateSel(id,arr,lFn,vk){
+  const s=document.getElementById(id),cur=s.value;
+  s.innerHTML='<option value="">— Select —</option>'+arr.map(i=>`<option value="${i[vk]}">${lFn(i)}</option>`).join('');
+  s.value=cur;
+}
+const condBadge=c=>c==='Operational'?`<span class="badge bg">${c}</span>`:c==='Maintenance'?`<span class="badge by">${c}</span>`:`<span class="badge bd">${c}</span>`;
+const statusBadge=s=>s==='ISSUED'?`<span class="badge bb">${s}</span>`:s==='RETURNED'?`<span class="badge bg">${s}</span>`:s==='OVERDUE'?`<span class="badge br">${s}</span>`:`<span class="badge bd">${s}</span>`;
+const clearBadge=c=>c==='TOP SECRET'?`<span class="badge br">${c}</span>`:c==='SECRET'?`<span class="badge by">${c}</span>`:c==='CONFIDENTIAL'?`<span class="badge bb">${c}</span>`:`<span class="badge bd">${c}</span>`;
+const purposeBadge=p=>p==='NCC Training'?`<span class="badge bg">${p}</span>`:p==='Shooting Range'?`<span class="badge bb">${p}</span>`:p==='Sports Event'?`<span class="badge bp">${p}</span>`:p==='Security Duty'?`<span class="badge by">${p}</span>`:`<span class="badge bd">${p||'—'}</span>`;
+const outcomeBadge=o=>o==='COMPLETED'?`<span class="badge bg">${o}</span>`:o==='IN PROGRESS'?`<span class="badge by">${o}</span>`:`<span class="badge bd">${o}</span>`;
+function openModal(id){document.querySelectorAll('.modal-error').forEach(e=>e.classList.remove('show'));document.getElementById('modal-'+id).classList.add('open');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+function merr(id,msg){const e=document.getElementById(id);e.textContent='⚠ '+msg;e.classList.add('show');}
+// ════════════════════ TRACKER ════════════════════
+let allTracker = [];
+
+async function loadTracker() {
+  const [ri, rw, rp] = await Promise.all([
+    apiFetch('/api/Issues'),
+    apiFetch('/api/weapons'),
+    apiFetch('/api/personnel')
+  ]);
+  if(!ri||!rw||!rp) return;
+  const Issues    = await ri.json();
+  const weapons   = await rw.json();
+  const personnel = await rp.json();
+
+  // Build weapon & personnel lookup maps
+  const wMap = {};
+  weapons.forEach(w => wMap[w.weapon_id] = w);
+  const pMap = {};
+  personnel.forEach(p => pMap[p.personnel_id] = p);
+
+  // Only active (non-returned) Issues
+  allTracker = Issues
+    .filter(i => i.status === 'ISSUED' || i.status === 'OVERDUE')
+    .map(i => {
+      const w = wMap[i.weapon_id]   || {};
+      const p = pMap[i.personnel_id]|| {};
+      const issued = new Date(i.issue_date);
+      const today  = new Date();
+      const days   = Math.floor((today - issued) / 86400000);
+      return {
+        issue_id:     i.issue_id,
+        officer:      p.name      || i.officer_name,
+        rank:         p.rank_     || '—',
+        unit:         p.unit_     || '—',
+        clearance:    p.clearance || '—',
+        weapon:       w.name      || i.weapon_name,
+        category:     w.category  || '—',
+        issue_date:   i.issue_date,
+        days_out:     days,
+        status:       i.status,
+        personnel_id: i.personnel_id,
+        weapon_id:    i.weapon_id,
+      };
+    });
+
+  // Stats
+  const overdue   = allTracker.filter(r => r.status === 'OVERDUE').length;
+  const maxDays   = allTracker.length ? Math.max(...allTracker.map(r=>r.days_out)) : 0;
+  const officers  = new Set(allTracker.map(r=>r.personnel_id)).size;
+  document.getElementById('trackerStats').innerHTML = `
+    <div class="stat-card" style="--accent:var(--blue2)"><div class="stat-num">${allTracker.length}</div><div class="stat-lbl">Active Issues</div></div>
+    <div class="stat-card" style="--accent:var(--red)"><div class="stat-num">${overdue}</div><div class="stat-lbl">Overdue</div></div>
+    <div class="stat-card" style="--accent:var(--gold)"><div class="stat-num">${officers}</div><div class="stat-lbl">Applicants Holding</div></div>
+    <div class="stat-card" style="--accent:var(--yellow)"><div class="stat-num">${maxDays}</div><div class="stat-lbl">Max Days Out</div></div>
+  `;
+
+  // Personnel summary
+  const pSummary = {};
+  Issues.forEach(i => {
+    const p = pMap[i.personnel_id] || {};
+    if (!pSummary[i.personnel_id]) {
+      pSummary[i.personnel_id] = {
+        name: p.name || i.officer_name,
+        rank: p.rank_ || p.rank || '—',
+        unit: p.unit_ || p.unit || '—',
+        active: 0, overdue: 0, total: 0
+      };
+    }
+    pSummary[i.personnel_id].total++;
+    if (i.status === 'ISSUED')  pSummary[i.personnel_id].active++;
+    if (i.status === 'OVERDUE') { pSummary[i.personnel_id].active++; pSummary[i.personnel_id].overdue++; }
+  });
+  document.getElementById('personnelSummaryTbody').innerHTML =
+    Object.values(pSummary).sort((a,b)=>b.active-a.active).map(p => `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.rank}</td>
+        <td>${p.unit}</td>
+        <td><strong style="color:${p.active>0?'var(--blue2)':'var(--text-dim)'}">${p.active}</strong></td>
+        <td>${p.overdue>0?`<strong style="color:var(--red)">${p.overdue}</strong>`:'—'}</td>
+        <td>${p.total}</td>
+      </tr>`).join('') || '<tr class="empty-row"><td colspan="6">No data</td></tr>';
+
+  filterTracker();
+}
+
+function filterTracker() {
+  const q = (document.getElementById('trackerSearch')?.value||'').toLowerCase();
+  const s = document.getElementById('trackerStatus')?.value||'';
+  let list = allTracker.filter(r =>
+    (!q || r.officer.toLowerCase().includes(q) || r.weapon.toLowerCase().includes(q)) &&
+    (!s || r.status === s)
+  );
+  document.getElementById('trackerCount').textContent = `${list.length} active records`;
+  document.getElementById('trackerTbody').innerHTML = list.length ? list.map(r => `
+    <tr>
+      <td><strong>${r.officer}</strong><br><span style="font-size:0.75rem;color:var(--text-dim)">${r.unit}</span></td>
+      <td class="mono" style="font-size:0.78rem">${r.rank}</td>
+      <td>${purposeBadge(r.clearance)}</td>
+      <td><strong>${r.weapon}</strong></td>
+      <td style="font-size:0.82rem;color:var(--text-dim)">${r.category}</td>
+      <td class="mono">${r.issue_date}</td>
+      <td><strong style="color:${r.days_out>30?'var(--red)':r.days_out>14?'var(--yellow)':'var(--green)'}">${r.days_out}d</strong></td>
+      <td>${statusBadge(r.status)}</td>
+      <td><button class="btn btn-green btn-sm" onclick="returnIssue(${r.issue_id})">↩ RETURN</button></td>
+    </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="9">NO ACTIVE Issues FOUND</td></tr>';
+}
+
+// ════ AUDIT LOG ════
+async function loadAudit() {
+  const r = await apiFetch('/api/audit');
+  if(!r) return;
+  const data = await r.json();
+  const actionColors = {TRIGGER:'var(--purple)',PROC:'var(--blue2)',UPDATE:'var(--yellow)',INSERT:'var(--green)'};
+  document.getElementById('auditTbody').innerHTML = data.length ? data.map(a=>`
+    <tr>
+      <td class="mono">${a.log_id}</td>
+      <td><span class="badge" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:${actionColors[a.action_]||'var(--text-dim)'}">${a.action_}</span></td>
+      <td style="color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:0.78rem">${a.table_name}</td>
+      <td class="mono">${a.record_id}</td>
+      <td style="font-size:0.83rem">${a.description}</td>
+      <td class="mono" style="font-size:0.72rem">${a.logged_at}</td>
+    </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="6">No audit records yet — issue a weapon to see triggers fire</td></tr>';
+}
+
+let _tt;function toast(msg,t='s'){const e=document.getElementById('toast');e.className='s'+t;e.textContent=(t==='s'?'✓ ':'⚠ ')+msg;clearTimeout(_tt);_tt=setTimeout(()=>e.className='',3000);}
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAIMS — Secure Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080a0e; --bg2:#0d1117; --bg3:#111820;
+  --gold:#c9a84c; --gold2:#e8c96e;
+  --blue:#1a6aff; --text:#d4d8e0; --text-dim:#6b7280;
+  --border:#1e2530; --red:#ef4444; --green:#22c55e;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;display:flex;align-items:center;justify-content:center;}
+
+/* grid bg */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(26,106,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(26,106,255,0.04) 1px,transparent 1px);
+  background-size:50px 50px;
+  animation:gridDrift 25s linear infinite;
+}
+@keyframes gridDrift{from{background-position:0 0;}to{background-position:50px 50px;}}
+
+.radial{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(201,168,76,0.05) 0%,transparent 70%);}
+
+.login-wrap{
+  position:relative;z-index:10;
+  width:100%;max-width:420px;
+  padding:2rem;
+  animation:slideUp 0.6s ease both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+.logo{text-align:center;margin-bottom:2rem;}
+.logo-title{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:6px;color:var(--gold);line-height:1;}
+.logo-sub{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:4px;text-transform:uppercase;margin-top:0.3rem;}
+
+.card{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:2rem 2rem 2.5rem;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+
+.card-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.3rem;letter-spacing:3px;
+  margin-bottom:0.3rem;
+}
+.card-sub{font-size:0.8rem;color:var(--text-dim);margin-bottom:1.8rem;}
+
+.field{margin-bottom:1.2rem;}
+label{
+  display:block;
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.68rem;color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:0.4rem;
+}
+input{
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:3px;
+  padding:0.75rem 1rem;
+  color:var(--text);
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.85rem;
+  outline:none;
+  transition:border-color 0.2s;
+}
+input:focus{border-color:var(--gold);}
+input::placeholder{color:var(--text-dim);opacity:0.5;}
+
+.btn{
+  width:100%;margin-top:0.5rem;
+  padding:0.9rem;
+  background:var(--gold);
+  border:none;border-radius:3px;
+  color:#000;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;letter-spacing:3px;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+}
+.btn:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,0.3);}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+.error{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+  border-radius:3px;padding:0.7rem 1rem;
+  font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--red);
+  margin-top:1rem;display:none;
+}
+.error.show{display:block;}
+
+.hint{
+  margin-top:1.5rem;
+  padding:1rem;
+  background:rgba(201,168,76,0.04);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:3px;
+}
+.hint-title{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;}
+.hint-row{font-size:0.8rem;color:var(--text-dim);display:flex;gap:0.5rem;margin-bottom:0.2rem;}
+.hint-row code{color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.75rem;}
+
+.spinner{
+  width:16px;height:16px;
+  border:2px solid rgba(0,0,0,0.3);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin 0.6s linear infinite;
+  display:none;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="radial"></div>
+<div class="login-wrap">
+  <div class="logo">
+    <div class="logo-title">WAIMS</div>
+    <div class="logo-sub">Weapon Arsenal Inventory Management System</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Secure Access</div>
+    <div class="card-sub">Authorized personnel only. All sessions are logged.</div>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter username" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter password">
+    </div>
+
+    <button class="btn" id="loginBtn" onclick="doLogin()">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">▶ AUTHENTICATE</span>
+    </button>
+
+    <div class="error" id="errorBox"></div>
+
+    <div class="hint">
+      <div class="hint-title">// TEST CREDENTIALS</div>
+      <div class="hint-row"><span>Admin:</span><code>admin</code><span>/</span><code>admin123</code></div>
+      <div class="hint-row"><span>Officer:</span><code>officer</code><span>/</span><code>officer123</code></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// redirect if already logged in
+if (localStorage.getItem('waims_token')) {
+  window.location.href = '/dashboard';
+}
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn      = document.getElementById('loginBtn');
+  const spinner  = document.getElementById('spinner');
+  const btnText  = document.getElementById('btnText');
+  const errorBox = document.getElementById('errorBox');
+
+  if (!username || !password) {
+    showError('Please enter username and password.');
+    return;
+  }
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'AUTHENTICATING...';
+  errorBox.classList.remove('show');
+
+  try {
+ const form = new URLSearchParams();
+form.append('username', username);
+form.append('password', password);
+
+const res = await fetch(`${API}/api/login`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: form
+});
+
+const txt = await res.text();
+console.log(txt);
+
+const data = JSON.parse(txt);
+    if (!res.ok) throw new Error(data.detail || 'Authentication failed');
+
+    localStorage.setItem('waims_token', data.access_token);
+    localStorage.setItem('waims_user', JSON.stringify(data.user));
+
+    btnText.textContent = '✓ ACCESS GRANTED';
+    btn.style.background = '#22c55e';
+
+    setTimeout(() => { window.location.href = '/dashboard.html'; }, 600);
+
+  } catch (err) {
+    showError(err.message);
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '▶ AUTHENTICATE';
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠ ' + msg;
+  box.classList.add('show');
+}
+</script>
+</body>
+</html>
